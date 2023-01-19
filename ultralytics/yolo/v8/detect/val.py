@@ -123,15 +123,19 @@ class DetectionValidator(BaseValidator):
     def print_results(self):
         pf = '%22s' + '%11i' * 2 + '%11.3g' * len(self.metrics.keys)  # print format
         self.logger.info(pf % ("all", self.seen, self.nt_per_class.sum(), *self.metrics.mean_results()))
+        with open(self.save_dir / ('results.txt'), 'a') as f:
+          f.write(pf % ("all", self.seen, self.nt_per_class.sum(), *self.metrics.mean_results())+ '\n')
+
         if self.nt_per_class.sum() == 0:
             self.logger.warning(
                 f'WARNING ⚠️ no labels found in {self.args.task} set, can not compute metrics without labels')
 
         # Print results per class
         if (self.args.verbose or not self.training) and self.nc > 1 and len(self.stats):
-            for i, c in enumerate(self.metrics.ap_class_index):
-                self.logger.info(pf % (self.names[c], self.seen, self.nt_per_class[c], *self.metrics.class_result(i)))
-
+            with open(self.save_dir / ('results.txt'), 'a') as f:
+                for i, c in enumerate(self.metrics.ap_class_index):
+                    self.logger.info(pf % (self.names[c], self.seen, self.nt_per_class[c], *self.metrics.class_result(i)))
+                    f.write(pf % (self.names[c], self.seen, self.nt_per_class[c], *self.metrics.class_result(i))+ '\n')
         if self.args.plots:
             self.confusion_matrix.plot(save_dir=self.save_dir, names=list(self.names.values()))
 
